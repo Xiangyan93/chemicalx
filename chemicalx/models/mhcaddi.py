@@ -459,11 +459,11 @@ class MHCADDI(Model):
         left_shifted_graph_size_cum_sum = torch.cumsum(graph_sizes_left, 0) - graph_sizes_left
         shift_sums_left = torch.repeat_interleave(left_shifted_graph_size_cum_sum, interactions)
         outer_segmentation_index = [
-            np.repeat(np.array(range(0, left_graph_size)), right_graph_size)
+            np.repeat(np.array(range(0, left_graph_size.cpu())), right_graph_size.cpu())
             for left_graph_size, right_graph_size in zip(graph_sizes_left, graph_sizes_right)
         ]
         outer_segmentation_index = functools.reduce(operator.iconcat, outer_segmentation_index, [])
-        outer_segmentation_index = torch.tensor(outer_segmentation_index) + shift_sums_left
+        outer_segmentation_index = torch.tensor(outer_segmentation_index, device=graph_sizes_left.device) + shift_sums_left
 
         right_shifted_graph_size_cum_sum = torch.cumsum(graph_sizes_right, 0) - graph_sizes_right
         shift_sums_right = torch.repeat_interleave(right_shifted_graph_size_cum_sum, interactions)
@@ -472,5 +472,5 @@ class MHCADDI(Model):
             for left_graph_size, right_graph_size in zip(graph_sizes_left, graph_sizes_right)
         ]
         outer_index = functools.reduce(operator.iconcat, outer_index, [])
-        outer_index = torch.tensor(outer_index) + shift_sums_right
+        outer_index = torch.tensor(outer_index, device=graph_sizes_left.device) + shift_sums_right
         return outer_segmentation_index, outer_index
